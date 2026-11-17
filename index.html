@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JavaScript Calculator</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/17.0.2/umd/react.development.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/17.0.2/umd/react-dom.development.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.26.5/babel.min.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const { useState } = React;
+
+      // order matters: it is the order the buttons appear in the grid
+      const BUTTONS = [
+        { id: "clear", label: "AC", type: "clear" },
+        { id: "divide", label: "÷", type: "op", value: "/" },
+        { id: "multiply", label: "×", type: "op", value: "*" },
+        { id: "seven", label: "7", type: "digit", value: "7" },
+        { id: "eight", label: "8", type: "digit", value: "8" },
+        { id: "nine", label: "9", type: "digit", value: "9" },
+        { id: "subtract", label: "−", type: "op", value: "-" },
+        { id: "four", label: "4", type: "digit", value: "4" },
+        { id: "five", label: "5", type: "digit", value: "5" },
+        { id: "six", label: "6", type: "digit", value: "6" },
+        { id: "add", label: "+", type: "op", value: "+" },
+        { id: "one", label: "1", type: "digit", value: "1" },
+        { id: "two", label: "2", type: "digit", value: "2" },
+        { id: "three", label: "3", type: "digit", value: "3" },
+        { id: "equals", label: "=", type: "equals" },
+        { id: "zero", label: "0", type: "digit", value: "0" },
+        { id: "decimal", label: ".", type: "decimal" },
+      ];
+
+      function App() {
+        const [expr, setExpr] = useState(""); // the formula being typed
+        const [result, setResult] = useState(null); // set right after "="
+        const [count, setCount] = useState(0); // how many calculations were done
+
+        // what the display shows
+        let display = "0";
+        if (result !== null) {
+          display = result;
+        } else if (expr !== "") {
+          const lastNumber = expr.match(/[\d.]+$/);
+          display = lastNumber ? lastNumber[0] : expr.slice(-1);
+        }
+
+        function pressDigit(d) {
+          if (result !== null) {
+            setExpr(d);
+            setResult(null);
+            return;
+          }
+          const current = expr.match(/[\d.]*$/)[0];
+          if (current === "0") {
+            if (d === "0") return; // no multiple leading zeros
+            setExpr(expr.slice(0, -1) + d);
+            return;
+          }
+          setExpr(expr + d);
+        }
+
+        function pressDecimal() {
+          if (result !== null) {
+            setExpr("0.");
+            setResult(null);
+            return;
+          }
+          const current = expr.match(/[\d.]*$/)[0];
+          if (current.includes(".")) return; // only one dot per number
+          setExpr(current === "" ? expr + "0." : expr + ".");
+        }
+
+        function pressOperator(op) {
+          if (result !== null) {
+            const base = result === "Error" ? "0" : result;
+            setExpr(base + op);
+            setResult(null);
+            return;
+          }
+          if (expr === "") {
+            setExpr("0" + op);
+            return;
+          }
+          const trailing = expr.match(/[+\-*/]*$/)[0];
+          if (op === "-") {
+            // a minus can follow another operator, but only once
+            if (trailing.length === 0 || (trailing.length === 1 && trailing !== "-")) {
+              setExpr(expr + "-");
+            }
+            return;
+          }
+          // + * / replace whatever operators were typed before
+          setExpr(expr.slice(0, expr.length - trailing.length) + op);
+        }
+
+        function pressEquals() {
+          if (result !== null || expr === "") return;
+          const clean = expr.replace(/[+\-*/]+$/, "");
+          if (clean === "") return;
+          const value = Function('"use strict"; return (' + clean + ")")();
+          if (!isFinite(value)) {
+            setResult("Error");
+          } else {
+            setResult(String(Math.round(value * 1e10) / 1e10));
+            setCount(count + 1);
+          }
+        }
+
+        function handleClick(btn) {
+          if (btn.type === "clear") {
+            setExpr("");
+            setResult(null);
+          } else if (btn.type === "digit") pressDigit(btn.value);
+          else if (btn.type === "decimal") pressDecimal();
+          else if (btn.type === "op") pressOperator(btn.value);
+          else if (btn.type === "equals") pressEquals();
+        }
+
+        return (
+          <div id="calculator">
+            <div id="formula">{expr}</div>
+            <div id="display">{display}</div>
+            {/* shows right after every 5th calculation, until the next key press */}
+            {result !== null && result !== "Error" && count % 5 === 0 && (
+              <div id="magic">🔮🪄</div>
+            )}
+            <div className="keys">
+              {BUTTONS.map((btn) => (
+                <button
+                  key={btn.id}
+                  id={btn.id}
+                  className={"key " + btn.type}
+                  onClick={() => handleClick(btn)}
+                >
+                  {btn.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      }
+
+      ReactDOM.render(<App />, document.getElementById("root"));
+    </script>
+
+    <script src="https://cdn.freecodecamp.org/testable-projects-fcc/v1/bundle.js"></script>
+  </body>
+</html>
