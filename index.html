@@ -15,7 +15,6 @@
     <script type="text/babel">
       const { useState } = React;
 
-      // order matters: it is the order the buttons appear in the grid
       const BUTTONS = [
         { id: "clear", label: "AC", type: "clear" },
         { id: "divide", label: "÷", type: "op", value: "/" },
@@ -37,11 +36,10 @@
       ];
 
       function App() {
-        const [expr, setExpr] = useState(""); // the formula being typed
-        const [result, setResult] = useState(null); // set right after "="
-        const [count, setCount] = useState(0); // how many calculations were done
+        const [expr, setExpr] = useState(""); 
+        const [result, setResult] = useState(null);
+        const [count, setCount] = useState(0); 
 
-        // what the display shows
         let display = "0";
         if (result !== null) {
           display = result;
@@ -58,7 +56,7 @@
           }
           const current = expr.match(/[\d.]*$/)[0];
           if (current === "0") {
-            if (d === "0") return; // no multiple leading zeros
+            if (d === "0") return; 
             setExpr(expr.slice(0, -1) + d);
             return;
           }
@@ -72,7 +70,7 @@
             return;
           }
           const current = expr.match(/[\d.]*$/)[0];
-          if (current.includes(".")) return; // only one dot per number
+          if (current.includes(".")) return; 
           setExpr(current === "" ? expr + "0." : expr + ".");
         }
 
@@ -89,13 +87,11 @@
           }
           const trailing = expr.match(/[+\-*/]*$/)[0];
           if (op === "-") {
-            // a minus can follow another operator, but only once
             if (trailing.length === 0 || (trailing.length === 1 && trailing !== "-")) {
               setExpr(expr + "-");
             }
             return;
           }
-          // + * / replace whatever operators were typed before
           setExpr(expr.slice(0, expr.length - trailing.length) + op);
         }
 
@@ -126,7 +122,7 @@
           <div id="calculator">
             <div id="formula">{expr}</div>
             <div id="display">{display}</div>
-            {/* shows right after every 5th calculation, until the next key press */}
+            {}
             {result !== null && result !== "Error" && count % 5 === 0 && (
               <div id="magic">🔮🪄</div>
             )}
